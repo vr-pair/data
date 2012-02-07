@@ -19,6 +19,10 @@ DS.RESTAdapter = DS.Adapter.extend({
       success: function(json) {
         this.didCreateRecord(store, type, record, json);
       }
+    }, {
+      action: 'create',
+      store:  store,
+      records: [record]
     });
   },
 
@@ -71,6 +75,10 @@ DS.RESTAdapter = DS.Adapter.extend({
       success: function(json) {
         this.didUpdateRecord(store, type, record, json);
       }
+    }, {
+      action: 'update',
+      store:  store,
+      records: [record]
     });
   },
 
@@ -119,6 +127,10 @@ DS.RESTAdapter = DS.Adapter.extend({
       success: function(json) {
         this.didDeleteRecord(store, type, record, json);
       }
+    }, {
+      action: 'delete',
+      store:  store,
+      records: [record]
     });
   },
 
@@ -162,6 +174,9 @@ DS.RESTAdapter = DS.Adapter.extend({
         this.sideload(store, type, json, root);
         store.load(type, json[root]);
       }
+    }, {
+      action: 'find',
+      store:  store
     });
   },
 
@@ -174,6 +189,9 @@ DS.RESTAdapter = DS.Adapter.extend({
         this.sideload(store, type, json, plural);
         store.loadMany(type, json[plural]);
       }
+    }, {
+      action: 'find',
+      store:  store
     });
   },
 
@@ -185,6 +203,9 @@ DS.RESTAdapter = DS.Adapter.extend({
         this.sideload(store, type, json, plural);
         store.loadMany(type, json[plural]);
       }
+    }, {
+      action: 'find',
+      store:  store
     });
   },
 
@@ -197,6 +218,9 @@ DS.RESTAdapter = DS.Adapter.extend({
         this.sideload(store, type, json, plural);
         recordArray.load(json[plural]);
       }
+    }, {
+      action: 'find',
+      store:  store
     });
   },
 
@@ -219,7 +243,11 @@ DS.RESTAdapter = DS.Adapter.extend({
     return name.replace(/([A-Z])/g, '_$1').toLowerCase().slice(1);
   },
 
-  ajax: function(url, type, hash) {
+  jQuery: jQuery,
+  error:  jQuery.noop,
+
+  ajax: function(url, type, hash, adapterContext) {
+    var self = this;
     hash.url = url;
     hash.type = type;
     hash.dataType = 'json';
@@ -230,7 +258,16 @@ DS.RESTAdapter = DS.Adapter.extend({
       hash.data = JSON.stringify(hash.data);
     }
 
-    jQuery.ajax(hash);
+    hash.error = function(jqXHR, textStatus, errorThrown) {
+      if (jqXHR.status === 422 && adapterContext.records && adapterContext.records.length === 1 && adapterContext.store) {
+        var data = JSON.parse( jqXHR.responseText );
+        adapterContext.store.recordWasInvalid(adapterContext.records[0], data['errors']);
+      } else {
+        self.error(jqXHR, textStatus, errorThrown, adapterContext);
+      }
+    };
+
+    this.jQuery.ajax(hash);
   },
 
   sideload: function(store, type, json, root) {
