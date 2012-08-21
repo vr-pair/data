@@ -35,7 +35,13 @@ DS.ManyArray = DS.RecordArray.extend({
   // Overrides Ember.Array's replace method to implement
   replaceContent: function(index, removed, added) {
     var parentRecord = get(this, 'parentRecord');
-    var pendingParent = parentRecord && !get(parentRecord, 'id');
+    //
+    // OCEANS
+    // ============
+    // Disabling this feature because we use hasMany without inverse belongsTo
+    // as a temporary, simulated hasAndBelongsToMany
+    //
+    var pendingParent = false; // parentRecord && !get(parentRecord, 'id');
     var stateManager = get(this, 'stateManager');
 
     // Map the array of record objects into an array of  client ids.
@@ -52,8 +58,14 @@ DS.ManyArray = DS.RecordArray.extend({
 
       var oldParent = this.assignInverse(record, parentRecord);
 
-      record.get('transaction')
-        .relationshipBecameDirty(record, oldParent, parentRecord);
+      //
+      // OCEANS
+      // ============
+      // Disabling this feature because we use hasMany without inverse
+      // belongsTo as a temporary, simulated hasAndBelongsToMany
+      //
+      //record.get('transaction')
+      //  .relationshipBecameDirty(record, oldParent, parentRecord);
 
       stateManager.send('recordWasAdded', record);
 
