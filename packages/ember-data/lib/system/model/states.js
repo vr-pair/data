@@ -342,6 +342,7 @@ var DirtyState = DS.State.extend({
 
     // EVENTS
     deleteRecord: Ember.K,
+    becameDirty: Ember.K,
 
     waitingOn: function(manager, object) {
       waitingOn(manager, object);
@@ -700,6 +701,10 @@ var states = {
 
         setAssociation: function(manager, context) {
           setAssociation(manager, context);
+          manager.goToState('updated');
+        },
+
+        becameDirty: function(manager) {
           manager.goToState('updated');
         },
 
